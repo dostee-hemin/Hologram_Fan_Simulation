@@ -1,15 +1,15 @@
 import processing.javafx.*;
 
-LED[] leds = new LED[7];            // Array of LEDs
-double angle = -HALF_PI;            // Current angle of the fan
-double rpm = 5700;                  // Revolutions per minute
-double totalMicroseconds;           // Time in microseconds since the program has started
-double arcIncrement = 0.001;        // The prevision level of displaying the LEDs
-
+LED[] leds = new LED[7];                          // Array of LEDs
 int minDiameter = 350;                            // Diameter of the inner most circle
 int maxDiameter = 660;                            // Diameter of the outer most circle
 int visibleArea = (maxDiameter - minDiameter)/2;  // The area between the two circle boundaries
 int LEDsize = visibleArea/leds.length;            // The size allocated for each LED in the visible area
+
+double angle = -HALF_PI;            // Current angle of the fan
+double rpm = 5700;                  // Revolutions per minute
+double totalMicroseconds;           // Time in microseconds since the program has started
+double arcIncrement = 0.001;        // The prevision level of displaying the LEDs
 
 void setup() {
   size(800, 800, FX2D);
