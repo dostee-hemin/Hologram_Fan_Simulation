@@ -21,6 +21,7 @@ void setup() {
   int numLEDs = int(txt[I++]);
   for (int i = 0; i < numLEDs; i++) {
     float distance = minDiameter/2 + (LEDsize * (i+0.5)); // Distances: 60, 90, 120, ...
+    if(i % 2 == 0) distance *= -1;
     
     int numActions = int(txt[I++]);
     ArrayList<Action> actions = new ArrayList<Action>();

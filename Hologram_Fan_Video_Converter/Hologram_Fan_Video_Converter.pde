@@ -8,7 +8,7 @@ int visibleArea = (maxDiameter - minDiameter)/2;  // The area between the two ci
 int LEDsize = visibleArea/leds.length;            // The size allocated for each LED in the visible area
 
 double rpm = 5700;                  // Revolutions per minute
-double totalMicroseconds;    // Time in microseconds since the program has started
+double totalMicroseconds;           // Time in microseconds since the program has started
 double arcIncrement = 0.001;        // The prevision level of displaying the LEDs
 double mspr = 1/(rpm/(60*100000));  // Microseconds per revolution
 double rpf = (rpm/60)/60;           // Revolution per frame
@@ -53,22 +53,31 @@ void draw() {
 
       // Get the position of the current LED on the canvas
       float magnitude = minDiameter/2 + (LEDsize * (i+0.5));
+      if(i % 2 == 0) magnitude *= -1;
       PVector p = PVector.fromAngle(angle).mult(magnitude);
       p.add(center);
 
-      // Get the pixel at the LED's position
-      int index = int(p.x) + int(p.y) * width;
-      color c = pixels[index];
+      // Get the average color of the pixels around the LED's position
+      PVector currentColor = new PVector();
+      for(int j=-LEDsize/2; j<=LEDsize/2; j++) {
+        for(int k=-LEDsize/2; k<=LEDsize/2; k++) {
+          int index = int(p.x + j) + int(p.y + k) * width;
+          color c = pixels[index];
+
+          currentColor.add(red(c), green(c), blue(c));
+        }
+      }
+      currentColor.div(LEDsize*LEDsize);
 
       // Represents if the LED should be on at this position or not (based on brightness)
-      boolean isOn = red(c) < 10;
+      boolean isOn = currentColor.x < 100;
 
       if(totalMicroseconds == 0) led.setInitialState(isOn);
 
       if(led.hasChangedState(isOn)) led.recordState();
 
       // Display for visualization purposes
-      fill(0, 255, 0, (red(c) < 10) ? 50 : 0);
+      fill(0, 255, 0, isOn ? 50 : 0);
       ellipse(p.x, p.y, LEDsize*0.6, LEDsize*0.6);
     }
     
