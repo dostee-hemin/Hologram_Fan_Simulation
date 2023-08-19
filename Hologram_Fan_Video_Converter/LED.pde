@@ -1,5 +1,5 @@
 class LED {
-  ArrayList<Double> times = new ArrayList<Double>();
+  ArrayList<Action> actions = new ArrayList<Action>();
   boolean startState;
   boolean currentState;
   double currentMicro;
@@ -8,9 +8,13 @@ class LED {
     return isOn != currentState;
   }
 
+  void resetFrame() {
+    currentMicro = 0;
+  }
+
   void recordState() {
+    actions.add(new Action(totalMicroseconds-currentMicro, currentState));
     currentState = !currentState;
-    times.add(totalMicroseconds-currentMicro);
     currentMicro = totalMicroseconds;
   }
 

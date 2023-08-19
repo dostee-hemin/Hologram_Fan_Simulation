@@ -1,6 +1,6 @@
 import processing.javafx.*;
 
-LED[] leds = new LED[7];                          // Array of LEDs
+LED[] leds = new LED[6];                          // Array of LEDs
 int minDiameter = 350;                            // Diameter of the inner most circle
 int maxDiameter = 660;                            // Diameter of the outer most circle
 int visibleArea = (maxDiameter - minDiameter)/2;  // The area between the two circle boundaries
@@ -16,17 +16,16 @@ void setup() {
 
 
   String[] txt = loadStrings("input.txt");
-  // Current line of the text file we are reading
-  int I = 0;
-  int numLEDs = int(txt[I++]);
-  for (int i = 0; i < numLEDs; i++) {
+  for (int i = 0; i < txt.length; i++) {
     float distance = minDiameter/2 + (LEDsize * (i+0.5)); // Distances: 60, 90, 120, ...
     if(i % 2 == 0) distance *= -1;
     
-    int numActions = int(txt[I++]);
+
+    String line = txt[i];
+    String[] allActions = line.split(";");
     ArrayList<Action> actions = new ArrayList<Action>();
-    for(int j=0; j<numActions; j++) {
-      String[] numbers = txt[I++].split(",");
+    for(int j=0; j<allActions.length; j++) {
+      String[] numbers = allActions[j].split(",");
       actions.add(new Action(Double.parseDouble(numbers[1]),numbers[0].equals("1")));
     }
     leds[i] = new LED(distance, actions.toArray(new Action[actions.size()]));
@@ -37,8 +36,8 @@ void draw() {
   background(0);
   
   // Control the fan speed using the mouse's x-position
-  rpm = map(mouseX,0,width,0,5700);
-  if(rpm > 5680) rpm = 5700;
+  // rpm = map(mouseX,0,width,0,5700);
+  // if(rpm > 5680) rpm = 5700;
 
   double mspr = 1/(rpm/(60*100000));  // Microseconds per revolution
   double rpf = (rpm/60)/60;           // Revolution per frame

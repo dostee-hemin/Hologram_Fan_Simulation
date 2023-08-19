@@ -1,7 +1,9 @@
-// The static image we will be displaying on the fan
-PImage img;
+import processing.javafx.*;
 
-LED[] leds = new LED[7];                          // Array of LEDs
+// The static image we will be displaying on the fan
+// PImage img;
+
+LED[] leds = new LED[6];                          // Array of LEDs
 int minDiameter = 350;                            // Diameter of the inner most circle
 int maxDiameter = 660;                            // Diameter of the outer most circle
 int visibleArea = (maxDiameter - minDiameter)/2;  // The area between the two circle boundaries
@@ -18,19 +20,23 @@ double microsecondIncrementPerFrame = 100000.0/60;                              
 double microsecondIncrementPerArcIncrement = microsecondIncrementPerFrame / numberOfIncrements;   // Time in microseconds that will pass every small increment
 
 void setup() {
-  size(800, 800);
+  size(800, 800, FX2D);
+
+  setupAnimation();
 
   // Load the image and initialize the LEDs
-  img = loadImage("hello.png");
+  // img = loadImage("hello.png");
   for(int i=0; i<leds.length; i++) {
     leds[i] = new LED();
   }
 }
 
 void draw() {
+  background(255);
   // Draw the image to the center of the canvas
-  imageMode(CENTER);
-  image(img, width/2, height/2, width, height);
+  // imageMode(CENTER);
+  // image(img, width/2, height/2, width, height);
+  playAnimation();
 
   // Draw the boundaries of the fan
   stroke(255, 0, 0);
@@ -45,6 +51,9 @@ void draw() {
 
   // Starting angle of the fan (starts at the top)
   float angle = -HALF_PI;
+  totalMicroseconds = 0;
+
+  for(LED l : leds) l.resetFrame();
 
   // While we haven't yet completed the required number of revolutions, keep updating and displaying the fan
   while(totalMicroseconds < ceil((float)rpf) * mspr) {
@@ -58,21 +67,21 @@ void draw() {
       p.add(center);
 
       // Get the average color of the pixels around the LED's position
-      PVector currentColor = new PVector();
-      for(int j=-LEDsize/2; j<=LEDsize/2; j++) {
-        for(int k=-LEDsize/2; k<=LEDsize/2; k++) {
+      float currentBrightness = 0;
+      for(int j=-5; j<=5; j++) {
+        for(int k=-5; k<=5; k++) {
           int index = int(p.x + j) + int(p.y + k) * width;
           color c = pixels[index];
 
-          currentColor.add(red(c), green(c), blue(c));
+          currentBrightness += brightness(c);
         }
       }
-      currentColor.div(LEDsize*LEDsize);
+      currentBrightness /= 5*5;
 
       // Represents if the LED should be on at this position or not (based on brightness)
-      boolean isOn = currentColor.x < 100;
+      boolean isOn = currentBrightness < 80;
 
-      if(totalMicroseconds == 0) led.setInitialState(isOn);
+      if(led.actions.isEmpty()) led.setInitialState(isOn);
 
       if(led.hasChangedState(isOn)) led.recordState();
 
@@ -88,27 +97,37 @@ void draw() {
   
   // Add the remaining state durations
   for(LED led : leds) {
-    led.times.add(ceil((float)rpf) * mspr-led.currentMicro);
+    led.actions.add(new Action(ceil((float)rpf) * mspr-led.currentMicro,led.currentState));
   }
-  
+}
+
+void keyPressed() {
   // Generate the output file
-  ArrayList<String> txt = new ArrayList<String>();
-  // Number of LEDs
-  txt.add(leds.length + "");
+  String[] txt = new String[leds.length];
   for(int i=0; i<leds.length; i++) {
     LED led = leds[i];
 
-    // Number of state changes
-    txt.add(led.times.size() + "");
+    String line = "";
 
     // Each state value + it's duration
-    boolean tempState = led.startState;
-    for(Double d:led.times) {
-      txt.add((tempState?"1":"0") + "," + d);
-      tempState = !tempState;
+    boolean previousState = led.actions.get(0).state;
+    double totalDuration = led.actions.get(0).duration;
+    for(int j=1; j<led.actions.size(); j++) {
+      Action a = led.actions.get(j);
+
+      if(previousState == a.state) {
+        totalDuration += a.duration;
+        continue;
+      }
+
+      line += (previousState?"1":"0") + "," + totalDuration + ";";
+      previousState = a.state;
+      totalDuration = a.duration;
     }
+    line += (previousState?"1":"0") + "," + totalDuration;
+    txt[i] = line;
   }
-  saveStrings("output.txt", txt.toArray(new String[txt.size()]));
-  
-  noLoop();
+
+  saveStrings("output.txt", txt);
+  println("Animation saved!");
 }
